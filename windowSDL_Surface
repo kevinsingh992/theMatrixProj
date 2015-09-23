@@ -1,0 +1,165 @@
+#include <SDL.h>
+#include <stdio.h>
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+#define SCREEN_HEIGHT 720
+#define SCREEN_WIDTH 480
+#define BPP 32
+
+SDL_Window *Window = NULL;
+SDL_Surface *Back = NULL;
+SDL_Surface *toDisplay = NULL;
+
+
+SDL_Surface *Load_Surface(string filename);
+
+
+bool init()
+{
+	bool success = true;
+
+	if (SDL_Init(SDL_INIT_VIDEO) < 0)
+	{
+		printf("SDL failed: %s \n", SDL_GetError());
+		success = false;
+	}
+	else
+	{
+		Window = SDL_CreateWindow("SDL Window", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+		if (Window == NULL)
+		{
+			printf("Window error");
+			success = false;
+
+
+		}
+		else
+		{
+			Back = SDL_GetWindowSurface(Window);
+		}
+	}
+
+	return success;
+}
+bool loadMedia()
+{
+	bool success = true;
+	
+	toDisplay = Load_Surface("C:/Users/ksingh/Documents/Visual Studio 2015/Projects/SDL2Projects/SDL_proj1_xx/Debug/wolf2.bmp");
+	if (toDisplay == NULL)
+	{
+
+		printf("failed to load image \n");
+		success = false;
+
+	}
+
+	return success;
+}
+void close()
+{
+	SDL_FreeSurface(toDisplay);
+	toDisplay = NULL;
+
+	SDL_DestroyWindow(Window);
+	Window = NULL;
+
+	SDL_Quit();
+
+
+
+}
+SDL_Surface *Load_Surface(string filename)
+{
+	
+
+
+	SDL_Surface* optimizedSurface = NULL;
+
+	SDL_Surface *loadedSurface = SDL_LoadBMP(filename.c_str());
+
+	if (loadedSurface == NULL)
+	{
+		printf("unable to load image");
+
+	}
+	else
+	{
+		optimizedSurface = SDL_ConvertSurface(loadedSurface, Back->format, NULL);
+		if (optimizedSurface == NULL)
+		{
+			printf("unable to optimize");
+		}
+
+		SDL_FreeSurface(loadedSurface);
+	}
+
+	return optimizedSurface;
+
+}
+
+
+
+int main(int argc, char* args[])
+{
+
+
+	if (!init())
+	{
+		printf("Failed to init! \n");
+
+	}
+	else
+	{
+		
+		if (!loadMedia())
+		{
+			printf("media failed to load! \n");
+		}
+		else
+		{
+			
+			//Main loop flag
+			bool quit = false;
+
+			//Event handler
+			SDL_Event e;
+
+			//While application is running
+			while (!quit)
+			{
+				//Handle events on queue
+				while (SDL_PollEvent(&e) != 0)
+				{
+					//User requests quit
+					if (e.type == SDL_QUIT)
+					{
+						quit = true;
+					}
+				}
+
+				SDL_Rect stretchRect;
+				stretchRect.x = 0;
+				stretchRect.y = 0;
+
+				stretchRect.w = SCREEN_WIDTH;
+				stretchRect.h = SCREEN_HEIGHT;
+
+				SDL_BlitScaled(toDisplay, NULL, Back, &stretchRect);
+
+				//
+				SDL_UpdateWindowSurface(Window);
+
+			}
+		}
+
+
+	}
+	
+	close();
+
+	return 0;
+}
